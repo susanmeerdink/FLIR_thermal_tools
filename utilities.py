@@ -23,10 +23,13 @@ def extract_coarse_image(flirobj, offset=[0]):
     Function that creates the coarse RGB image that matches the resolution of the thermal image.
     
     INPUTS:
-    1) flirobj: the flirimageextractor object.
-    
+        1) flirobj: the flirimageextractor object.
+        2) offset: optional variable that shifts the RGB image to match the same field of view as thermal image. 
+                If not provided the offset values will be extracted from FLIR file. 
+                Use the manual_img_registration function to determine offset.
     OUTPUTS:
-    1) crop: a 3D numpy arary of RGB image that matches resolution and field of view of thermal image.
+        1) lowres: a 3D numpy array of RGB image that matches resolution of thermal image (It has not been cropped) 
+        2) crop: a 3D numpy arary of RGB image that matches resolution and field of view of thermal image.
     """
     # Get RGB Image
     visual = flirobj.rgb_image_np
@@ -40,11 +43,9 @@ def extract_coarse_image(flirobj, offset=[0]):
     else:
         offsetx = offset[0]
         offsety = offset[1]
-    pipx1 = int(subprocess.check_output([flirobj.exiftool_path, "-PiPX1", "-b", flirobj.flir_img_filename])) 
     pipx2 = int(subprocess.check_output([flirobj.exiftool_path, "-PiPX2", "-b", flirobj.flir_img_filename])) # Width
-    pipy1 = int(subprocess.check_output([flirobj.exiftool_path, "-PiPY1", "-b", flirobj.flir_img_filename])) 
     pipy2 = int(subprocess.check_output([flirobj.exiftool_path, "-PiPY2", "-b", flirobj.flir_img_filename])) # Height
-    real2ir = float(subprocess.check_output([flirobj.exiftool_path, "-Real2IR", "-b", flirobj.flir_img_filename]))
+    real2ir = float(subprocess.check_output([flirobj.exiftool_path, "-Real2IR", "-b", flirobj.flir_img_filename])) # conversion of RGB to Temp
     
     # Set up Arrays
     height_range = np.arange(0,highres_ht,real2ir).astype(int)
@@ -54,19 +55,9 @@ def extract_coarse_image(flirobj, offset=[0]):
     # Assigning low resolution data
     lowres = np.swapaxes(visual[htv, wdv,  :], 0, 1)
     
-    # Getting additional variables
-#    center_height = lowres.shape[0]/2
-#    center_width = lowres.shape[1]/2
-#    h1 = center_height - ((pipy2 - pipy1)/2) + offsety 
-#    h2 = center_height + ((pipy2 - pipy1)/2) + offsety 
-#    w1 = center_width - ((pipx2 - pipx1)/2) + offsetx
-#    w2 = center_width + ((pipx2 - pipx1)/2) + offsetx
-#    height_range = np.arange(h1,h2).astype(int)
-#    width_range = np.arange(w1,w2).astype(int)
+    # Cropping low resolution data
     height_range = np.arange(-offsety,-offsety+pipy2).astype(int)
     width_range = np.arange(-offsetx,-offsetx+pipx2).astype(int)
-
-    # Cropping low resolution data
     xv, yv = np.meshgrid(height_range,width_range)
     crop = np.swapaxes(lowres[xv, yv, :],0,1)
     
