@@ -175,3 +175,22 @@ def classify_rgb(img, K=3):
     plt.show()
 
     return label_image, result_image
+
+def mask_kmeans_classimg(rgbimg, kmeansimg, maskclass=[]):
+    """
+    """
+    if len(maskclass) < 1:
+        print('Please provide classes to mask')
+    else:
+        mask = np.ones((kmeansimg.shape[0], kmeansimg.shape[1]))
+        mask_img = rgbimg
+        for m in range(0,len(maskclass)):
+            mask_temp = np.ones((kmeansimg.shape[0], kmeansimg.shape[1]))
+            idx_x, idx_y = np.where(kmeansimg == maskclass[m])
+            mask_temp[idx_x, idx_y] = 0
+            mask = mask * mask_temp
+        for d in range(0,rgbimg.shape[2]):
+            mask_img[:,:,d] = rgbimg[:,:,d] * mask
+        
+    return mask_img
+        
