@@ -2,9 +2,11 @@
 Code that processes FLIR imagery.
 
 ## Dependencies
-flirimageextractor: 
-	https://pypi.org/project/flirimageextractor/   
+flirimageextractor:   
+	https://pypi.org/project/flirimageextractor/     
 	https://flirimageextractor.readthedocs.io/en/latest/flirimageextractor.html
+exiftools:   
+	Depending on where exiftools is installed you may have to change the exiftools path for flirimageextractor. An example of this is in the demo. 
 
 
 ## Functionality I want:

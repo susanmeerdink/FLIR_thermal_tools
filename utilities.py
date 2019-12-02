@@ -66,7 +66,18 @@ def extract_coarse_image(flirobj, offset=[0]):
 def manual_img_registration(filename):
     """
     Function that displays the thermal and RGB image so that similar locations 
-    can be selected in both images. 
+    can be selected in both images. It is recommended that at least three tied-points
+    are collected. Using the tie points the average x and y pixel offset will be determined.
+    
+    HOW TO:
+    Left click adds points, right click removes points (necessary after a pan or zoom),
+    and middle click stops point collection. 
+    The keyboard can also be used to select points in case your mouse does not have one or 
+    more of the buttons. The delete and backspace keys act like right clicking 
+    (i.e., remove last point), the enter key terminates input and any other key 
+    (not already used by the window manager) selects a point. 
+    ESC will delete all points - do not use. 
+    
     INPUTS:
         1) filename: a string with the thermal image location. 
     OUTPUTS:
@@ -86,7 +97,7 @@ def manual_img_registration(filename):
     ax1.imshow(therm)
     ax1.set_title('Thermal')
     ax1.text(0,-100,'Collect points matching features between images. Select location on thermal then RGB image.')
-    ax1.text(0,-75,'Right click adds a point. Left click removes most recently added point. Middle click stops point collection.')
+    ax1.text(0,-75,'Right click adds a point. Left click removes most recently added point. Middle click (or enter) stops point collection.')
     ax1.text(0,-50,'Zoom/Pan add a point, but you can remove with left click. Or use back arrow to get back to original view.')
     ax2 = fig.add_subplot(1,2,2)
     ax2.imshow(rgb)
@@ -101,8 +112,14 @@ def manual_img_registration(filename):
     pts_rgb = pts[idx_rgb,:]
     
     # Getting Difference between images to determine offset
-    pts_diff = pts_therm - pts_rgb  
-    offset = np.around(np.mean(pts_diff, axis=0))
-    
+    size_therm = pts_therm.shape[0]
+    size_rgb = pts_rgb.shape[0]
+    offset = [0,0]
+    if size_therm == size_rgb:
+        pts_diff = pts_therm - pts_rgb  
+        offset = np.around(np.mean(pts_diff, axis=0))
+    else:
+        print('Number of points do not match between images')
+        
     plt.close()
     return offset, pts_therm, pts_rgb
