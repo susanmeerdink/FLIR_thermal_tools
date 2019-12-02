@@ -1,8 +1,10 @@
 # Importing Functions
 import flirimageextractor
 from matplotlib import pyplot as plt
+from matplotlib import colors
 import numpy as np
 import subprocess
+import cv2
 
 def save_thermal_csv(flirobj, filename):
     """
@@ -123,3 +125,53 @@ def manual_img_registration(filename):
         
     plt.close()
     return offset, pts_therm, pts_rgb
+
+def classify_rgb(img, K=3):
+    """
+    This classifies an RGB image using K-Means clustering.
+    Note: only 10 colors are specified, so will have plotting error with K > 10
+    INPUTS:
+        1) img: a 3D numpy array of rgb image
+        2) K: optional, the number of K-Means Clusters
+    OUTPUTS:
+        1) label_image: a 2D numpy array the same x an y dimensions as input rgb image, 
+            but each pixel is a k-means class.
+        2) result_image: a 3D numpy array the same dimensions as input rgb image, 
+            but having undergone Color Quantization which is the process of 
+            reducing number of colors in an image.
+    """
+    # Preparing RGB Image
+    vectorized = img.reshape((-1,3))
+    vectorized = np.float32(vectorized)
+    
+    # K-Means
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    attempts = 10
+    ret,label,center=cv2.kmeans(vectorized,K,None,criteria,attempts,cv2.KMEANS_RANDOM_CENTERS)
+    
+    # Use if you want to have quantized imaged
+    center = np.uint8(center)
+    res = center[label.flatten()]
+    result_image = res.reshape((img.shape))
+    
+    # Labeled class image
+    label_image = label.reshape((img.shape[0], img.shape[1]))
+
+    # Plotting Results
+    coloroptions = ['b','g','r','c','m','y','k','orange','navy','gray']
+    fig = plt.figure(figsize=(15,10))
+    ax1 = fig.add_subplot(1,2,1)
+    ax1.imshow(img)
+    ax1.set_title('Original Image') 
+    ax1.set_xticks([])
+    ax1.set_yticks([])
+    ax2 = fig.add_subplot(1,2,2)
+    cmap = colors.ListedColormap(coloroptions[0:K])
+    ax2.imshow(label_image, cmap=cmap)
+    ax2.set_title('K-Means Classes') 
+    ax2.set_xticks([]) 
+    ax2.set_yticks([])
+    fig.subplots_adjust(left=0.05, top = 0.8, bottom=0.01, wspace=0.05)
+    plt.show()
+
+    return label_image, result_image
