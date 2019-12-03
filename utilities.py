@@ -5,6 +5,9 @@ from matplotlib import colors
 import numpy as np
 import subprocess
 import cv2
+import matplotlib
+matplotlib.use('TKAgg') # Needed to have figures display properly. 
+import numpy.ma as ma 
 
 def save_thermal_csv(flirobj, filename):
     """
@@ -172,25 +175,16 @@ def classify_rgb(img, K=3):
     ax2.set_xticks([]) 
     ax2.set_yticks([])
     fig.subplots_adjust(left=0.05, top = 0.8, bottom=0.01, wspace=0.05)
-    plt.show()
+    plt.show(block='TRUE')
+    
+    # Plotting just K-Means with label
+    ticklabels = ['1','2','3','4','5','6','7','8','9','10']
+    fig, ax = plt.subplots(figsize=(10,10))
+    im = ax.imshow(label_image, cmap=cmap)
+    cbar = fig.colorbar(im, ax=ax, shrink = 0.6, ticks=np.arange(0,K)) 
+    cbar.ax.set_yticklabels(ticklabels[0:K]) 
+    cbar.ax.set_ylabel('Classes')
+    plt.show(block='TRUE')
 
     return label_image, result_image
-
-def mask_kmeans_classimg(rgbimg, kmeansimg, maskclass=[]):
-    """
-    """
-    if len(maskclass) < 1:
-        print('Please provide classes to mask')
-    else:
-        mask = np.ones((kmeansimg.shape[0], kmeansimg.shape[1]))
-        mask_img = rgbimg
-        for m in range(0,len(maskclass)):
-            mask_temp = np.ones((kmeansimg.shape[0], kmeansimg.shape[1]))
-            idx_x, idx_y = np.where(kmeansimg == maskclass[m])
-            mask_temp[idx_x, idx_y] = 0
-            mask = mask * mask_temp
-        for d in range(0,rgbimg.shape[2]):
-            mask_img[:,:,d] = rgbimg[:,:,d] * mask
-        
-    return mask_img
         

@@ -12,6 +12,9 @@ import utilities as u
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import numpy as np
+import matplotlib
+matplotlib.use('TKAgg') # Needed to have figures display properly. 
+import numpy.ma as ma 
 
 filename = 'C:\\Users\\susanmeerdink\\Dropbox (UFL)\\Analysis\\Thermal Experiment\\Soledad\\IR_55920_Copy.jpg'
 flir = flirimageextractor.FlirImageExtractor(exiftool_path="C:\\Users\\susanmeerdink\\.utilities\\exiftool.exe")
@@ -20,27 +23,38 @@ flir.process_image(filename, RGB=True)
 offset = [-155, -68]
 rgb_lowres, rgb_crop = u.extract_coarse_image(flir, offset=offset)
 
-rgb_class, rgbqcolor = u.classify_rgb(rgb_crop, 6)
-
-plt.show(block='TRUE') 
-
-# Displaying Results with classes
-fig, ax = plt.subplots(figsize=(10,10))
-cmap = colors.ListedColormap(['blue','green','orange','red','black','yellow'])
-im = ax.imshow(rgb_class, cmap=cmap)
-cbar = fig.colorbar(im, ax=ax, shrink = 0.6, ticks=[0.5, 1.25, 2, 2.75, 3.5, 4.5]) #0.8,1.6,2.4,3.2,3.6
-cbar.ax.set_yticklabels(['1','2','3','4','5','6']) 
-cbar.ax.set_ylabel('Classes')
+## building mask 
+mask = np.zeros((rgb_crop.shape[0], rgb_crop.shape[1]))
+mask[50:270,210:380] = 1
+plt.figure(figsize=(15,15))
+plt.imshow(mask)
 plt.show(block='TRUE')
 
-# Mask the rgb image to improve kmeans class?
-rgb_masked = u.mask_kmeans_classimg(rgb_crop, rgb_class, maskclass=[1,2,3,4,5])
+mask_img = rgb_crop
+for d in range(0,rgb_crop.shape[2]):
+    mask_img[:,:,d] = rgb_crop[:,:,d] * mask
+plt.figure(figsize=(15,15))
+plt.imshow(mask_img)
+plt.show(block='TRUE')
+
+rgb_class, rgbqcolor = u.classify_rgb(mask_img, 3)
+
+# %%
+# Pull out just plants
+class_of_interest = np.ones((rgb_class.shape[0], rgb_class.shape[1]))
+class_of_interest = np.ma.masked_where(rgb_class != 0, class_of_interest)
 
 plt.figure(figsize=(10,10))
-plt.imshow(rgb_masked)
+plt.imshow(class_of_interest)
 plt.show(block='TRUE')
 
+
 # %% 
-rgbmask_class, rgbqcolor = u.classify_rgb(rgb_masked, 4)
-
-
+therm = flir.get_thermal_np()
+therm_masked = np.ma.masked_where(class_of_interest != 1, therm)
+plt.figure(figsize=(10,5))
+plt.subplot(1,2,1)
+plt.imshow(therm)
+plt.subplot(1,2,2)
+plt.imshow(therm_masked)
+plt.show(block='TRUE')
