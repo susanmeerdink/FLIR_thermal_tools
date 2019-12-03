@@ -7,7 +7,6 @@ import subprocess
 import cv2
 import matplotlib
 matplotlib.use('TKAgg') # Needed to have figures display properly. 
-import numpy.ma as ma 
 
 def save_thermal_csv(flirobj, filename):
     """
