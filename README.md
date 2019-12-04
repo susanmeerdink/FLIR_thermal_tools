@@ -30,7 +30,7 @@ These are functions that are included in this repository. The python package fli
   * batch_extract_temp_for_class: This function extracts temperature values for pixels of interest. This is a directory of images. 
   * create_class_mask: This function creates a mask of K-Means classes of interest
   * apply_mask_to_rgb: This function applies the K-Means class mask to the RGB imagery
-  * develop_correct_emissivity: This function takes user input and defines the appropriate emissivity for each K-Means class. 
+  * develop_correct_emissivity: This function takes user input and defines the appropriate emissivity for each K-Means class. See section below about assigning emissivities.
   * correct_temp_emiss: This function takes the correct emissivity and runs temperature correction
   * plot_temp_timeseries: this function displays the timeseries data with mean, min, and max temperature.
 
@@ -52,3 +52,6 @@ Important things to note:
   * You MUST select the thermal point first THEN the RGB point.
   * ANY TIME you click (even with zoom and pan) you add a point. Make sure to right click after zooming or panning to remove that point. 
   * The back arrow is nice to get back to the full screen image, then you don't risk accident points using pan feature.  
+  
+## Correcting Temperature for Appropriate Emissivity 
+The FLIR cameras use an assume emissivity of 0.95 (can be changed in settings). However, many materials do not have that emissivity of 0.95. Differences in emissivity changes the temperature retrieved for a pixel. Using the RGB image classified through K-Means, we can assign an emissivity that is more appropriate for a material and correct the temperature. All corrections are done using the stefan-boltzman equation. There are tables available online with materials broadband emissivities. Vegetation is generally 0.98, while white paper is generally 0.86.  
