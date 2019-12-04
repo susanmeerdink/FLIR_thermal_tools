@@ -273,22 +273,25 @@ def create_class_mask(classimg, classinterest, plot=1):
     
     return mask
 
-def extract_temp_for_class(flirobj, mask, plot=1):
+def extract_temp_for_class(flirobj, mask, emiss=[0], plot=1):
     """
     This function creates a numpy array thermal image that ONLY contains pixels for class
     of interest with all other pixels set to 0. This is for a SINGLE image
     INPUTS:
         1) flirobj: the flirimageextractor object
         2) mask: a binary mask with class pixels set as 1. 
-        3) plot: a flag that determine if a figure of tempeature image is displayed. 
+        3) emiss: OPTIONAL, a 2D numpy array with each pixel containing correct emissivity
+                If provided the temperature will be corrected for emissivity
+        4) plot: a flag that determine if a figure of tempeature image is displayed. 
                 1 = plot displayed, 0 = no plot is displayed
     OUTPUTS:
         1) therm_masked: a 2D numpy array of temperature values for a class of interest
     """       
-    therm = flirobj.get_thermal_np()
-#    therm_masked = np.copy(therm)
-#    idx_x, idx_y = np.where(mask == 0)
-#    therm_masked[idx_x,idx_y] = 0
+    if len(emiss) == 1:
+        therm = flirobj.get_thermal_np()
+    else:
+        therm = correct_temp_emiss(flirobj, emiss, plot=0)
+        
     therm_masked = np.ma.masked_where(mask != 1, therm)
     
     if plot == 1:
@@ -301,14 +304,15 @@ def extract_temp_for_class(flirobj, mask, plot=1):
         
     return therm_masked
 
-def batch_extract_temp_for_class(dirLoc, mask, exiftoolpath=''):
+def batch_extract_temp_for_class(dirLoc, mask, emiss=[0], exiftoolpath=''):
     """
     This function creates a 3D numpy array thermal image that ONLY contains pixels for class
     of interest with all other pixels set to 0. This is for a directory of images.
     INPUTS:
         1) dirLoc: a string containing the directory of FLIR images.
         2) mask: a binary mask with class pixels set as 1. 
-        3) exiftoolpath = OPTIONAL a string containing the location of exiftools.
+        3) emiss: a 2D numpy array with each pixel containing correct emissivity
+        4) exiftoolpath = OPTIONAL a string containing the location of exiftools.
                 Only use if the exiftool path is different than the python path.
     OUTPUTS:
         1) all_temp: a 3D numpy array of temperature values for a class of interest
@@ -328,7 +332,10 @@ def batch_extract_temp_for_class(dirLoc, mask, exiftoolpath=''):
 
         flir.process_image(filelist[f], RGB=True)
         
-        all_temp[:,:,f] = extract_temp_for_class(flir, mask, plot=0)
+        if len(emiss) == 1:
+            all_temp[:,:,f] = extract_temp_for_class(flir, mask, plot=0)
+        else:
+            all_temp[:,:,f] = extract_temp_for_class(flir, mask, emiss, plot=0)
         
     return all_temp
 
@@ -358,7 +365,7 @@ def plot_temp_timeseries(temp):
     plt.gca().yaxis.grid(True)
     plt.title('Temperature through Timeseries')
     plt.xlabel('Time Steps')
-    plt.ylabel('Temperature (Celsius))')
+    plt.ylabel('Temperature (Celsius)')
     plt.show(block='true')
     
 def develop_correct_emissivity(class_img):
@@ -373,7 +380,7 @@ def develop_correct_emissivity(class_img):
         1) emiss_img: a numpy array with same dimensions as K-Means class image,
                 but every pixel has an emissivity value.
     """
-    K = np.unique(class_img)
+    K = len(np.unique(class_img))
     
     # Plotting just K-Means with label
     coloroptions = ['b','g','r','c','m','y','k','orange','navy','gray']
@@ -384,12 +391,12 @@ def develop_correct_emissivity(class_img):
     cbar = fig.colorbar(im, ax=ax, shrink = 0.6, ticks=np.arange(0,K)) 
     cbar.ax.set_yticklabels(ticklabels[0:K]) 
     cbar.ax.set_ylabel('Classes')
-    plt.show(block='TRUE')
+    plt.show(block='true')
     
     print('Input the emissivity for each class. If unknown put 0.95')
-    emiss = np.zeros((K.shape[0]))
+    emiss = np.zeros((K))
     for c in range(0,K):
-        strout = 'Class ' + str(c) + 'Emissivity: '
+        strout = 'Emissivity for Class ' + str(c+1) + ': '
         emiss[c] = input(strout)
         
     emiss_img = np.zeros((class_img.shape[0], class_img.shape[1]))    
@@ -398,4 +405,36 @@ def develop_correct_emissivity(class_img):
         emiss_img[idx_x, idx_y] = emiss[e]
         
     return emiss_img
+
+def correct_temp_emiss(flirobj, emiss, plot=1):
+    """
+    The thermal camera has an assume emissivity of 0.95, but many materials do 
+    not have that emissivity which changes the temperature retrieved. This function 
+    takes in the user provided emissivity array for each pixel and corrects the
+    temperature values.
+    This uses the stephan boltzman equation. 
+    INPUTS:
+        1) flirobj: a flirimageextractor object
+        2) emiss: a 2D numpy array with each pixel containing correct emissivity
+                Using these values the temperature will be corrected for emissivity
+    OUTPUTS:
+        1) corrected_temp: a 2D numpy array with corrected temperature values
+    """    
+    therm = flirobj.get_thermal_np()
     
+    sbconstant = 0.00000005670374419 
+    
+    # Get total flux using the assumed emissivity of 0.95
+    totalflux = 0.95 * sbconstant * np.power(therm, 4)
+    
+    # Solving for Temperature given new emissivities
+    value = totalflux/(emiss*sbconstant)
+    corrected_temp = np.power(value,1/4)
+    
+    if plot == 1:
+        plt.figure(figsize=(5,5))
+        plt.imshow(corrected_temp, cmap='jet')
+        plt.colorbar()
+        plt.show(block='true')
+        
+    return corrected_temp

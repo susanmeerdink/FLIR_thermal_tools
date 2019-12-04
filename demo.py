@@ -42,18 +42,18 @@ rgb_lowres, rgb_crop = u.extract_coarse_image(flir)
 
 ### Determine manual correction of Thermal and RGB registration 
 offset, pts_temp, pts_rgb = u.manual_img_registration(flir)
-print('X pixel offset is ' + str(offset[0]) + 'and Y pixel offset is ' + str(offset[1]))
+print('X pixel offset is ' + str(offset[0]) + ' and Y pixel offset is ' + str(offset[1]))
 
 ## Fix Thermal and RGB registration with manual correction
 # You can see with the manually determined offsets that the images are now aligned.
 # By doing this we can use the RGB image to classify the material types in the images.
 # This is useful if you are interested in one particular part or class type.
-# offset = [-155, -68]  # This i the manual offset I got when running the demo images.
+offset = [-155, -70]  # This i the manual offset I got when running the demo images.
 rgb_lowres, rgb_crop = u.extract_coarse_image(flir, offset=offset, plot=1)
 
 #  Build a mask of your area of interest 
 mask = np.zeros((rgb_crop.shape[0], rgb_crop.shape[1]))
-mask[50:270,210:380] = 1
+mask[30:270,220:400] = 1
 rgb_mask = u.apply_mask_to_rgb(mask, rgb_crop)
 
 # Classify using K-Means the newly masked rgb image
@@ -62,14 +62,16 @@ rgb_class, rgb_qcolor = u.classify_rgb(rgb_mask, 3)
 # Pull out just the class for plant material
 class_mask = u.create_class_mask(rgb_class, 2)
 
+# Correct temperature imagery for correct emissivity
+emiss_img = u.develop_correct_emissivity(rgb_class)
 
 # Pull out thermal pixels of just plants for single image
-temp_mask = u.extract_temp_for_class(flir, class_mask)
+temp_mask = u.extract_temp_for_class(flir, class_mask, emiss_img)
 
 # Pull out thermal pixels of just plants for a set of images
 dirLoc = 'C:\\Users\\susanmeerdink\\Documents\\Git\\FLIR_thermal_tools\\Test_Images\\'
 exiftoolpath = "C:\\Users\\susanmeerdink\\.utilities\\exiftool.exe"
-all_temp_mask = u.batch_extract_temp_for_class(dirLoc, class_mask, exiftoolpath=exiftoolpath)
+all_temp_mask = u.batch_extract_temp_for_class(dirLoc, class_mask, emiss_img, exiftoolpath=exiftoolpath)
 plt.figure(figsize=(15,5))
 plt.subplot(1,3,1)
 plt.imshow(all_temp_mask[:,:,0])
