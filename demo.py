@@ -17,7 +17,7 @@ import utilities as u
 
 ## Load Image using flirimageextractor
 # Note: I had to change the path of my exiftool which you may need to also change.
-filename = 'C:\\Users\\susanmeerdink\\Dropbox (UFL)\\Analysis\\Thermal Experiment\\Soledad\\IR_55920_Copy.jpg'
+filename = 'C:\\Users\\susanmeerdink\\Documents\\Git\\FLIR_thermal_tools\\Test_Images\\IR_56020.jpg'
 flir = flirimageextractor.FlirImageExtractor(exiftool_path="C:\\Users\\susanmeerdink\\.utilities\\exiftool.exe")
 flir.process_image(filename, RGB=True)
 
@@ -39,61 +39,49 @@ plt.show(block='TRUE') # I needed to have block=TRUE for image to remain display
 # You can see that the images do not line up and there is an offset even after 
 # correcting for offset provided in file header
 rgb_lowres, rgb_crop = u.extract_coarse_image(flir)
-plt.figure(figsize=(10,5))
-plt.subplot(1,2,1)
-plt.imshow(therm)
-plt.title('Thermal Image')
-plt.subplot(1,2,2)
-plt.imshow(rgb_crop)
-plt.title('RGB Cropped Image (with NO manual adjustment)')
-plt.show(block='TRUE') 
 
-## Determine manual correction of Thermal and RGB registration 
-offset, pts_temp, pts_rgb = u.manual_img_registration(filename)
-print('X pixel offset is ' + str(offset[0]) + 'and Y pixel offset is ' + str(offset[1]))
+### Determine manual correction of Thermal and RGB registration 
+offset, pts_temp, pts_rgb = u.manual_img_registration(flir)
+print('X pixel offset is ' + str(offset[0]) + ' and Y pixel offset is ' + str(offset[1]))
 
 ## Fix Thermal and RGB registration with manual correction
 # You can see with the manually determined offsets that the images are now aligned.
 # By doing this we can use the RGB image to classify the material types in the images.
 # This is useful if you are interested in one particular part or class type.
-offset = [-155, -68]
-rgb_lowres, rgb_crop = u.extract_coarse_image(flir, offset=offset)
-plt.figure(figsize=(10,5))
-plt.subplot(1,2,1)
-plt.imshow(therm)
-plt.title('Thermal Image')
-plt.subplot(1,2,2)
-plt.imshow(rgb_crop)
-plt.title('RGB Cropped Image (with manual adjustment)')
-plt.show(block='TRUE') 
+offset = [-155, -70]  # This i the manual offset I got when running the demo images.
+rgb_lowres, rgb_crop = u.extract_coarse_image(flir, offset=offset, plot=1)
 
-# Build a mask of your area of interest 
+#  Build a mask of your area of interest 
 mask = np.zeros((rgb_crop.shape[0], rgb_crop.shape[1]))
-mask[50:270,210:380] = 1
-rgb_mask = rgb_crop
-for d in range(0,rgb_crop.shape[2]):
-    rgb_mask[:,:,d] = rgb_crop[:,:,d] * mask   
-plt.figure(figsize=(10,5))
-plt.imshow(rgb_mask)
-plt.show(block='TRUE')
+mask[30:270,220:400] = 1
+rgb_mask = u.apply_mask_to_rgb(mask, rgb_crop)
 
 # Classify using K-Means the newly masked rgb image
-rgb_class, rgbqcolor = u.classify_rgb(rgb_mask, 3)
+rgb_class, rgb_qcolor = u.classify_rgb(rgb_mask, 3)
 
 # Pull out just the class for plant material
-class_of_interest = np.ones((rgb_class.shape[0], rgb_class.shape[1]))
-class_of_interest = np.ma.masked_where(rgb_class != 2, class_of_interest)
-plt.figure(figsize=(10,10))
-plt.imshow(class_of_interest)
+class_mask = u.create_class_mask(rgb_class, 2)
+
+# Correct temperature imagery for correct emissivity
+emiss_img = u.develop_correct_emissivity(rgb_class)
+
+# Pull out thermal pixels of just plants for single image
+temp_mask = u.extract_temp_for_class(flir, class_mask, emiss_img)
+
+# Pull out thermal pixels of just plants for a set of images
+dirLoc = 'C:\\Users\\susanmeerdink\\Documents\\Git\\FLIR_thermal_tools\\Test_Images\\'
+exiftoolpath = "C:\\Users\\susanmeerdink\\.utilities\\exiftool.exe"
+all_temp_mask = u.batch_extract_temp_for_class(dirLoc, class_mask, emiss_img, exiftoolpath=exiftoolpath)
+plt.figure(figsize=(15,5))
+plt.subplot(1,3,1)
+plt.imshow(all_temp_mask[:,:,0])
+plt.subplot(1,3,2)
+plt.imshow(all_temp_mask[:,:,1])
+plt.subplot(1,3,3)
+plt.imshow(all_temp_mask[:,:,2])
 plt.show(block='TRUE')
 
-# Pull out thermal pixels of just plants
-therm_masked = np.ma.masked_where(class_of_interest != 1, therm)
-plt.figure(figsize=(10,5))
-plt.subplot(1,2,1)
-plt.imshow(therm)
-plt.subplot(1,2,2)
-plt.imshow(therm_masked)
-plt.show(block='TRUE')
+# Plot timeseries
+u.plot_temp_timeseries(all_temp_mask)
 
-## END
+# END
