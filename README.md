@@ -44,7 +44,8 @@ This order assumes you have a thermal timeseries where the camera does not move 
 4. Build a mask that turns all pixels NOT of interest into zeros. 
 5. Classify masked RGB image using K-Means. Determine which class number is of interest.
 6. Create mask where all class of interest pixels are 1 while other pixels are 0. 
-7. Using mask, extract pixels from thermal imagery that are only your class of interest. 
+7. (OPTIONAL) Determine and assign appropriate emissivities to each of the K-Means classes.
+8. Using mask, extract pixels from thermal imagery that are only your class of interest. If correct emissivities were developed in step 6, temperature imagery will be corrected. 
 
 ## Manually Determing RGB and Temperature Image Offset:
 Often, the RGB and Thermal camera lens do not line up accurately. It is possible to change this in the settings, but because the RGB imagery has a larger field of view and is higher resolution the offset between lens can be corrected afterwards. Using the function called manual_img_registration a user can determine tie points between thermal and rgb images used to correct the alignment. The function returns an x and y offset that can be used to determine how much the RGB image should be shifted to match the same distribution of the thermal image. This function pulls up an image with the thermal image on the left and the rgb image on the right. It depends on the matplotlib built in buttons: https://matplotlib.org/3.1.1/users/navigation_toolbar.html. I suggest selecting at a minimum three tie point locations. The average x and y offset will be calculated from these points.   
