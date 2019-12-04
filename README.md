@@ -1,4 +1,4 @@
-# FLIR-Temp_Retrieval
+# FLIR Thermal Tools
 This repository of code processes temperature imagery collected using FLIR cameras (http://flir.com/). Some of the capabilities include:  
   * extracting temperature information as .csv file
   * retrieving RGB imagery associated with thermal imagery
@@ -11,7 +11,8 @@ Note: this may not work for all FLIR cameras and is specifically designed for ca
 This repository requires multiple packages to process the imagery including:  
 flirimageextractor:   
   * https://pypi.org/project/flirimageextractor/     
-  * https://flirimageextractor.readthedocs.io/en/latest/flirimageextractor.html
+  * https://flirimageextractor.readthedocs.io/en/latest/flirimageextractor.html  
+
 exiftools: 
   * https://github.com/exiftool/exiftool  
   * Depending on where exiftools is installed you may have to change the exiftools path for flirimageextractor. An example of this is in the demo.py file. 
@@ -30,16 +31,16 @@ These are functions that are included in this repository. The python package fli
 This order assumes you have a thermal timeseries where the camera does not move between image collections.
 1. Load in first FLIR image of the timeseries. 
 2. Examine thermal and full resolution RGB images to ensure everything is correct.
-3. Check how well thermal and RGB image registration is without manually correction. If registration is not ideal complete the following steps:
-  1. Determine manual correction of thermal and RGB image registration. 
-  2. Apply manually determine x and y offset to the RGB imagery.
+3. Check how well thermal and RGB image registration is without manually correction. If registration is not ideal complete the following steps:  
+     1. Determine manual correction of thermal and RGB image registration.  
+     2. Apply manually determine x and y offset to the RGB imagery.
 4. Build a mask that turns all pixels NOT of interest into zeros. 
 5. Classify masked RGB image using K-Means. Determine which class number is of interest.
 6. Create mask where all class of interest pixels are 1 while other pixels are 0. 
 7. Using mask, extract pixels from thermal imagery that are only your class of interest. 
 
 ## Manually Determing RGB and Temperature Image Offset:
-Often, the RGB and Thermal camera lens do not line up accurately. It is possible to change this in the settings, but because the RGB imagery has a larger field of view and is higher resolution the offset between lens can be corrected afterwards. Using the function called manual_img_registration a user can determine tie points between thermal and rgb images used to correct the alignment. The function returns an x and y offset that can be used to determine how much the RGB image should be shifted to match the same distribution of the thermal image. This function pulls up an image with the thermal image on the left and the rgb image on the right. It depends on the matplotlib built in buttons: https://matplotlib.org/3.1.1/users/navigation_toolbar.html. I suggest selecting at a minimum three tie point locations. The average x and y offset will be calculated from these points. 
+Often, the RGB and Thermal camera lens do not line up accurately. It is possible to change this in the settings, but because the RGB imagery has a larger field of view and is higher resolution the offset between lens can be corrected afterwards. Using the function called manual_img_registration a user can determine tie points between thermal and rgb images used to correct the alignment. The function returns an x and y offset that can be used to determine how much the RGB image should be shifted to match the same distribution of the thermal image. This function pulls up an image with the thermal image on the left and the rgb image on the right. It depends on the matplotlib built in buttons: https://matplotlib.org/3.1.1/users/navigation_toolbar.html. I suggest selecting at a minimum three tie point locations. The average x and y offset will be calculated from these points.   
 Important things to note:
   * You MUST select the thermal point first THEN the RGB point.
   * ANY TIME you click (even with zoom and pan) you add a point. Make sure to right click after zooming or panning to remove that point. 
