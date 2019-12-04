@@ -26,6 +26,10 @@ These are functions that are included in this repository. The python package fli
   * extract_coarse_image: The FLIR imagery contains a high spatial resolution and large field of view RGB imagery. This function scales and crops RGB imagery to match the thermal imagery. If a manual offset value is not provided it will crop the image based on offset values contained in header file. 
   * manual_img_registration: This function helps users determine the manual offset between rgb and thermal imagery. See section below on more details on this function. 
   * classify_rgb: This function classifies the RGB imagery using K-Means to determine the materials in the images. Tip: mask out areas that are not of interest to improve classification. 
+  * extract_temp_for_class: This function extracts temperature values for pixels of interest. This is for a single image
+  * batch_extract_temp_for_class: This function extracts temperature values for pixels of interest. This is a directory of images. 
+  * create_class_mask: This function creates a mask of K-Means classes of interest
+  * apply_mask_to_rgb: This function applies the K-Means class mask to the RGB imagery
 
 ## Suggested Work Order
 This order assumes you have a thermal timeseries where the camera does not move between image collections.
