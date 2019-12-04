@@ -17,9 +17,6 @@ exiftools:
   * https://github.com/exiftool/exiftool  
   * Depending on where exiftools is installed you may have to change the exiftools path for flirimageextractor. An example of this is in the demo.py file. 
 
-## Functionality I want:
-Correct FLIR temperature with new emissivity values
-
 ## Functions:
 These are functions that are included in this repository. The python package flirimageextractor also has a lot of built in functions that users maybe interested in.
   * save_thermal_csv: Extracts the temperature data and exports it as a .csv. A comparison between temperature retrieval using FLIR Tools and this code shows a 0.001 to 0.006 degrees celsius difference.
