@@ -30,6 +30,9 @@ These are functions that are included in this repository. The python package fli
   * batch_extract_temp_for_class: This function extracts temperature values for pixels of interest. This is a directory of images. 
   * create_class_mask: This function creates a mask of K-Means classes of interest
   * apply_mask_to_rgb: This function applies the K-Means class mask to the RGB imagery
+  * develop_correct_emissivity: This function takes user input and defines the appropriate emissivity for each K-Means class. 
+  * correct_temp_emiss: This function takes the correct emissivity and runs temperature correction
+  * plot_temp_timeseries: this function displays the timeseries data with mean, min, and max temperature.
 
 ## Suggested Work Order
 This order assumes you have a thermal timeseries where the camera does not move between image collections.
