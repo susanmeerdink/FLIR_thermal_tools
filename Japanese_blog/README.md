@@ -123,7 +123,7 @@ demo.pyの35行目周辺に以下のコードがあります。ご自身のexift
 
 ## 3.2. demo.pyの実行
 
-[`demo.py`](http://demo.py) や `[utilities.py](http://utilities.py)` のあるディレクトリで、`demo.py`を実行すると、`Test_Images`フォルダ内の画像に対して、テストコードが実行されます。特に引数の設定は必要ありません。
+`demo.py` や `utilities.py` のあるディレクトリで、`demo.py`を実行すると、`Test_Images`フォルダ内の画像に対して、テストコードが実行されます。特に引数の設定は必要ありません。
 
 私はAnaconda環境を用いているため、Anaconda Promptから実行しています。
 
