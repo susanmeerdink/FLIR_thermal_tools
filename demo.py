@@ -5,6 +5,9 @@ repository. It will also give an example work flow for a set of images.
 
 @author: susanmeerdink
 December 2019
+
+@updated by: KentaItakura
+October 2022
 """
 
 # Importing Functions
@@ -14,11 +17,25 @@ import matplotlib
 matplotlib.use('TKAgg') # Needed to have figures display properly. 
 import flirimageextractor
 import utilities as u
+import os
+
+absDirName = os.path.dirname(os.path.abspath(__file__))
+print('Abosolute directory name of demo.py: ', absDirName)
 
 ## Load Image using flirimageextractor
 # Note: I had to change the path of my exiftool which you may need to also change.
-filename = 'C:\\Users\\susanmeerdink\\Documents\\Git\\FLIR_thermal_tools\\Test_Images\\IR_56020.jpg'
-flir = flirimageextractor.FlirImageExtractor(exiftool_path="C:\\Users\\susanmeerdink\\.utilities\\exiftool.exe")
+# filename = 'C:\\Users\\susanmeerdink\\Documents\\Git\\FLIR_thermal_tools\\Test_Images\\IR_56020.jpg'
+filename = os.path.join(absDirName,'Test_Images','IR_56020.jpg')
+dirLoc = os.path.join(absDirName,'Test_Images')
+
+# Specify the path of exiftool
+# Example1
+# exiftoolpath = "C:\\Users\\susanmeerdink\\.utilities\\exiftool.exe"
+# Example2
+exiftoolpath = "C:\Program Files (x86)\exif\exiftool.exe"
+
+flir = flirimageextractor.FlirImageExtractor(exiftool_path=exiftoolpath)
+
 flir.process_image(filename, RGB=True)
 
 ## Examine thermal and full resolution RGB images
@@ -39,6 +56,14 @@ plt.show(block='TRUE') # I needed to have block=TRUE for image to remain display
 # You can see that the images do not line up and there is an offset even after 
 # correcting for offset provided in file header
 rgb_lowres, rgb_crop = u.extract_coarse_image(flir)
+
+## Save the thermal information into CSV file
+pre, ext = os.path.splitext(filename)
+csvNameOut = pre+'.csv'
+print('The CSV file is named as follows')
+print(csvNameOut)
+u.save_thermal_csv(flir, csvNameOut)
+
 
 ### Determine manual correction of Thermal and RGB registration 
 offset, pts_temp, pts_rgb = u.manual_img_registration(flir)
@@ -69,8 +94,8 @@ emiss_img = u.develop_correct_emissivity(rgb_class)
 temp_mask = u.extract_temp_for_class(flir, class_mask, emiss_img)
 
 # Pull out thermal pixels of just plants for a set of images
-dirLoc = 'C:\\Users\\susanmeerdink\\Documents\\Git\\FLIR_thermal_tools\\Test_Images\\'
-exiftoolpath = "C:\\Users\\susanmeerdink\\.utilities\\exiftool.exe"
+# dirLoc = 'C:\\Users\\susanmeerdink\\Documents\\Git\\FLIR_thermal_tools\\Test_Images\\'
+
 all_temp_mask = u.batch_extract_temp_for_class(dirLoc, class_mask, emiss_img, exiftoolpath=exiftoolpath)
 plt.figure(figsize=(15,5))
 plt.subplot(1,3,1)

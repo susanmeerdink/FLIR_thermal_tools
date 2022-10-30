@@ -1,3 +1,5 @@
+## **このレポジトリの動かし方や内容は[こちらのブログ](https://kentapt.hatenablog.com/entry/2022/10/16/152920)にも書かれています。よろしければぜひご覧ください**
+
 # FLIR Thermal Tools
 This repository of code processes temperature imagery collected using FLIR cameras (http://flir.com/). Some of the capabilities include:  
   * extracting temperature information as .csv file
